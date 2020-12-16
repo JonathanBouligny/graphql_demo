@@ -66,6 +66,14 @@ const RootQueryType = new GraphQLObjectType({
   name: "Query",
   description: "Root Query",
   fields: () => ({
+    god: {
+      type: GodType,
+      description: "A single god",
+      args: {
+        id: { type: GraphQLInt },
+      },
+      resolve: (parent, args) => gods.find((god) => god.id === args.id),
+    },
     gods: {
       type: new GraphQLList(GodType),
       description: "List of All Gods",
@@ -76,11 +84,63 @@ const RootQueryType = new GraphQLObjectType({
       description: "List of All Pantheons",
       resolve: () => pantheons,
     },
+    pantheon: {
+      type: PantheonType,
+      description: "A Single Pantheon",
+      //Used id instead of pantheon_id beacuse i wanted the api to just ref
+      args: {
+        pantheon_id: { type: GraphQLInt },
+      },
+      resolve: (parent, args) =>
+        pantheons.find((pantheon) => pantheon.pantheon_id === args.pantheon_id),
+    },
+  }),
+});
+
+const RootMutationType = new GraphQLObjectType({
+  name: "Mutation",
+  description: "Root Mutation",
+  fields: () => ({
+    addGod: {
+      type: GodType,
+      description: "Add a God",
+      args: {
+        name: { type: GraphQLNonNull(GraphQLString) },
+        pantheon_id: { type: GraphQLNonNull(GraphQLInt) },
+      },
+      resolve: (parent, args) => {
+        const god = {
+          id: gods.length + 1,
+          name: args.name,
+          pantheon_id: args.pantheon_id,
+        };
+
+        gods.push(god);
+        return god;
+      },
+    },
+    addPantheon: {
+      type: PantheonType,
+      description: "Add a Pantheon",
+      args: {
+        name: { type: GraphQLNonNull(GraphQLString) },
+      },
+      resolve: (parent, args) => {
+        const pantheon = {
+          pantheon_id: pantheons.length + 1,
+          name: args.name,
+        };
+
+        pantheons.push(pantheon);
+        return pantheon;
+      },
+    },
   }),
 });
 
 const schema = new GraphQLSchema({
   query: RootQueryType,
+  mutation: RootMutationType,
 });
 
 app.use(
